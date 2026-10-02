@@ -13,8 +13,16 @@ datasource db {
 
 model Student {
   id        String   @id @default(uuid())
-  token     String   @unique
+  nis       String   @unique
+  password  String
   name      String
   kelas     String
+  createdAt DateTime @default(now())
+}
+
+model ExamSession {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
