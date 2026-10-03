@@ -12,7 +12,7 @@ datasource db {
 }
 
 model Student {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   nis       String   @unique
   password  String
   name      String

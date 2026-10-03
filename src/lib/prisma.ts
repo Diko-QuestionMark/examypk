@@ -1,7 +1,15 @@
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
+// Membuat "Sopir" koneksi ke Neon Database
+const connectionString = `${process.env.DATABASE_URL}`;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
 const prismaClientSingleton = () => {
-  return new PrismaClient();
+  // Memasukkan sopir (adapter) ke dalam Prisma
+  return new PrismaClient({ adapter });
 };
 
 declare const globalThis: {
