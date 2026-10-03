@@ -99,6 +99,12 @@ export async function getSessions() {
 
 export async function createSession() {
   try {
+    // Nonaktifkan semua sesi yang masih aktif
+    await prisma.examSession.updateMany({
+      where: { isActive: true },
+      data: { isActive: false },
+    });
+
     // Generate 6-char uppercase token
     const token = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -112,22 +118,6 @@ export async function createSession() {
   }
 }
 
-export async function toggleSession(id: string, isActive: boolean) {
-  try {
-    const session = await prisma.examSession.update({
-      where: { id },
-      data: { isActive },
-    });
-    return {
-      success: true,
-      data: session,
-      message: isActive ? 'Sesi diaktifkan.' : 'Sesi dinonaktifkan.',
-    };
-  } catch (error) {
-    console.error('Toggle session error:', error);
-    return { success: false, message: 'Gagal mengubah status sesi.' };
-  }
-}
 
 export async function deleteSession(id: string) {
   try {
@@ -136,5 +126,68 @@ export async function deleteSession(id: string) {
   } catch (error) {
     console.error('Delete session error:', error);
     return { success: false, message: 'Gagal menghapus sesi.' };
+  }
+}
+
+// ==================== QUESTIONS ====================
+export async function getQuestions() {
+  try {
+    const questions = await prisma.question.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return { success: true, data: questions };
+  } catch (error) {
+    console.error('Get questions error:', error);
+    return { success: false, message: 'Gagal memuat data soal.' };
+  }
+}
+
+export async function createQuestion(data: {
+  text: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  optionE: string;
+  correctAnswer: string;
+  subject: string;
+  kelas: string;
+}) {
+  try {
+    const question = await prisma.question.create({ data });
+    return { success: true, data: question, message: 'Soal berhasil ditambahkan.' };
+  } catch (error) {
+    console.error('Create question error:', error);
+    return { success: false, message: 'Gagal menambahkan soal.' };
+  }
+}
+
+export async function updateQuestion(id: number, data: {
+  text: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  optionE: string;
+  correctAnswer: string;
+  subject: string;
+  kelas: string;
+}) {
+  try {
+    const question = await prisma.question.update({ where: { id }, data });
+    return { success: true, data: question, message: 'Soal berhasil diperbarui.' };
+  } catch (error) {
+    console.error('Update question error:', error);
+    return { success: false, message: 'Gagal memperbarui soal.' };
+  }
+}
+
+export async function deleteQuestion(id: number) {
+  try {
+    await prisma.question.delete({ where: { id } });
+    return { success: true, message: 'Soal berhasil dihapus.' };
+  } catch (error) {
+    console.error('Delete question error:', error);
+    return { success: false, message: 'Gagal menghapus soal.' };
   }
 }

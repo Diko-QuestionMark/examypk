@@ -655,3 +655,75 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===================== TOKEN CARD ===================== */
+.token-card {
+  background: #ffffff;
+  border: 1px solid #e8ecf1;
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.token-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8994a7;
+  margin-bottom: 1.25rem;
+}
+
+.token-card-value {
+  font-family: 'Courier New', monospace;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+  border: 2px dashed rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: all;
+}
+
+.token-card-value:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.token-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  font-size: 0.82rem;
+  color: #8994a7;
+}
+
+.token-card-hint {
+  font-size: 0.78rem;
+  color: #a0aab8;
+  margin-top: 0.75rem;
+}
+
+.token-card-empty {
+  padding: 2rem 0;
+  color: #8994a7;
+}
+
+.token-card-empty p {
+  font-size: 0.95rem;
+}
+
+.token-card-warning {
+  font-size: 0.78rem;
+  color: #d97706;
+  margin-top: 0.75rem;
+}
