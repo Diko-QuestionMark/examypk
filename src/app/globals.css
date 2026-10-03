@@ -18,6 +18,10 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   min-height: 100vh;
+}
+
+/* Center login page only */
+body:has(.login-container) {
   display: flex;
   align-items: center;
   justify-content: center;
