@@ -11,6 +11,43 @@ datasource db {
   provider = "postgresql"
 }
 
+// ==========================================
+// ROLE & USER MANAGEMENT
+// ==========================================
+
+enum Role {
+  ADMIN
+  TEACHER
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  password  String
+  name      String
+  role      Role       @default(TEACHER)
+  createdAt DateTime   @default(now())
+
+  // Relasi: Guru membuat banyak Paket Soal (ExamBank)
+  examBanks ExamBank[]
+}
+
+// ==========================================
+// MASTER DATA
+// ==========================================
+
+model Subject {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique // cth: "Matematika", "Bahasa Inggris"
+  
+  // Relasi ke Paket Soal
+  examBanks ExamBank[]
+}
+
+// ==========================================
+// SISWA & SESI UJIAN
+// ==========================================
+
 model Student {
   id        Int      @id @default(autoincrement())
   nis       String   @unique
@@ -21,10 +58,41 @@ model Student {
 }
 
 model ExamSession {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  token       String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  // Sesi ujian ini menggunakan soal dari paket mana?
+  examBankId  Int
+  examBank    ExamBank @relation(fields: [examBankId], references: [id])
+}
+
+// ==========================================
+// BANK SOAL & PERTANYAAN
+// ==========================================
+
+enum ExamStatus {
+  DRAFT
+  READY
+}
+
+model ExamBank {
+  id          Int          @id @default(autoincrement())
+  title       String       // cth: "UAS Ganjil Matematika X"
+  
+  subjectId   Int
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  
+  authorId    Int
+  author      User         @relation(fields: [authorId], references: [id])
+  
+  targetKelas String       // cth: "X-A", atau "Kelas X"
+  status      ExamStatus   @default(DRAFT)
+  createdAt   DateTime     @default(now())
+
+  questions   Question[]
+  sessions    ExamSession[]
 }
 
 model Question {
@@ -36,7 +104,10 @@ model Question {
   optionD       String
   optionE       String
   correctAnswer String
-  subject       String
-  kelas         String
+  
+  // Relasi ke Paket Soal
+  examBankId    Int
+  examBank      ExamBank @relation(fields: [examBankId], references: [id])
+  
   createdAt     DateTime @default(now())
 }

@@ -17,6 +17,7 @@ export async function getDashboardStats() {
     const recentSessions = await prisma.examSession.findMany({
       orderBy: { createdAt: 'desc' },
       take: 5,
+      include: { examBank: true }
     });
 
     return {
@@ -89,6 +90,7 @@ export async function getSessions() {
   try {
     const sessions = await prisma.examSession.findMany({
       orderBy: { createdAt: 'desc' },
+      include: { examBank: true }
     });
     return { success: true, data: sessions };
   } catch (error) {
@@ -97,7 +99,7 @@ export async function getSessions() {
   }
 }
 
-export async function createSession() {
+export async function createSession(examBankId: number) {
   try {
     // Nonaktifkan semua sesi yang masih aktif
     await prisma.examSession.updateMany({
@@ -109,7 +111,7 @@ export async function createSession() {
     const token = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const session = await prisma.examSession.create({
-      data: { token },
+      data: { token, examBankId },
     });
     return { success: true, data: session, message: `Sesi berhasil dibuat. Token: ${session.token}` };
   } catch (error) {
@@ -117,7 +119,6 @@ export async function createSession() {
     return { success: false, message: 'Gagal membuat sesi ujian.' };
   }
 }
-
 
 export async function deleteSession(id: string) {
   try {
@@ -129,11 +130,90 @@ export async function deleteSession(id: string) {
   }
 }
 
-// ==================== QUESTIONS ====================
-export async function getQuestions() {
+// ==================== SUBJECTS (MATA PELAJARAN) ====================
+export async function getSubjects() {
   try {
-    const questions = await prisma.question.findMany({
+    const subjects = await prisma.subject.findMany({
+      orderBy: { name: 'asc' },
+    });
+    return { success: true, data: subjects };
+  } catch (error) {
+    console.error('Get subjects error:', error);
+    return { success: false, message: 'Gagal memuat daftar mapel.' };
+  }
+}
+
+export async function createSubject(name: string) {
+  try {
+    const existing = await prisma.subject.findUnique({ where: { name } });
+    if (existing) return { success: false, message: 'Mata pelajaran sudah ada.' };
+
+    const subject = await prisma.subject.create({ data: { name } });
+    return { success: true, data: subject, message: 'Mapel berhasil ditambahkan.' };
+  } catch (error) {
+    console.error('Create subject error:', error);
+    return { success: false, message: 'Gagal menambahkan mapel.' };
+  }
+}
+
+// ==================== EXAM BANKS (PAKET SOAL) ====================
+export async function getExamBanks() {
+  try {
+    const examBanks = await prisma.examBank.findMany({
       orderBy: { createdAt: 'desc' },
+      include: { subject: true, author: true, _count: { select: { questions: true } } }
+    });
+    return { success: true, data: examBanks };
+  } catch (error) {
+    console.error('Get exam banks error:', error);
+    return { success: false, message: 'Gagal memuat paket soal.' };
+  }
+}
+
+export async function createExamBank(data: { title: string; subjectId: number; targetKelas: string; authorId?: number }) {
+  try {
+    let authorId = data.authorId;
+    // Otomatis membuat akun admin dummy pertama kali jika belum ada (karena tabel baru)
+    if (!authorId) {
+      let admin = await prisma.user.findFirst();
+      if (!admin) {
+        admin = await prisma.user.create({
+          data: { username: 'admin_master', password: 'password', name: 'Administrator', role: 'ADMIN' }
+        });
+      }
+      authorId = admin.id;
+    }
+
+    const examBank = await prisma.examBank.create({
+      data: { title: data.title, subjectId: data.subjectId, targetKelas: data.targetKelas, authorId }
+    });
+    return { success: true, data: examBank, message: 'Paket soal berhasil dibuat.' };
+  } catch (error) {
+    console.error('Create exam bank error:', error);
+    return { success: false, message: 'Gagal membuat paket soal.' };
+  }
+}
+
+export async function deleteExamBank(id: number) {
+  try {
+    // Harus hapus pertanyaannya dulu karena relasi
+    await prisma.question.deleteMany({ where: { examBankId: id } });
+    await prisma.examBank.delete({ where: { id } });
+    return { success: true, message: 'Paket soal beserta isinya berhasil dihapus.' };
+  } catch (error) {
+    console.error('Delete exam bank error:', error);
+    return { success: false, message: 'Gagal menghapus paket soal.' };
+  }
+}
+
+// ==================== QUESTIONS ====================
+export async function getQuestions(examBankId?: number) {
+  try {
+    const where = examBankId ? { examBankId } : {};
+    const questions = await prisma.question.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { examBank: true }
     });
     return { success: true, data: questions };
   } catch (error) {
@@ -150,8 +230,7 @@ export async function createQuestion(data: {
   optionD: string;
   optionE: string;
   correctAnswer: string;
-  subject: string;
-  kelas: string;
+  examBankId: number;
 }) {
   try {
     const question = await prisma.question.create({ data });
@@ -170,8 +249,7 @@ export async function updateQuestion(id: number, data: {
   optionD: string;
   optionE: string;
   correctAnswer: string;
-  subject: string;
-  kelas: string;
+  examBankId: number;
 }) {
   try {
     const question = await prisma.question.update({ where: { id }, data });
@@ -191,3 +269,4 @@ export async function deleteQuestion(id: number) {
     return { success: false, message: 'Gagal menghapus soal.' };
   }
 }
+
