@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { logoutAdmin } from './actions';
 
 const navItems = [
   { href: '/admin', icon: '📊', label: 'Dashboard' },
@@ -13,6 +14,13 @@ const navItems = [
 
 export default function AdminNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logoutAdmin();
+    router.push('/admin/login');
+    router.refresh();
+  };
 
   return (
     <aside className="admin-sidebar">
@@ -39,6 +47,17 @@ export default function AdminNav() {
           </Link>
         ))}
       </nav>
+
+      <div style={{ padding: '1.5rem', marginTop: 'auto' }}>
+        <button 
+          onClick={handleLogout}
+          style={{ width: '100%', padding: '0.75rem', backgroundColor: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s' }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fecaca'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+        >
+          🚪 Keluar
+        </button>
+      </div>
 
     </aside>
   );

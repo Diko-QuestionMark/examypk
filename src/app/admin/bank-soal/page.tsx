@@ -158,9 +158,11 @@ export default function BankSoalPage() {
           <div className="topbar-actions">
             {viewMode === 'banks' ? (
               <>
+                {/* 
                 <button className="admin-btn admin-btn-ghost" onClick={() => setShowSubjectModal(true)}>
                   ➕ Tambah Mapel Baru
-                </button>
+                </button> 
+                */}
                 <button className="admin-btn admin-btn-primary" onClick={() => setShowBankModal(true)}>
                   ➕ Buat Paket Soal
                 </button>

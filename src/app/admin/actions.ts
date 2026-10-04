@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '../../lib/prisma';
+import { cookies } from 'next/headers';
 
 // ==================== DASHBOARD ====================
 export async function getDashboardStats() {
@@ -128,6 +129,33 @@ export async function deleteSession(id: string) {
     console.error('Delete session error:', error);
     return { success: false, message: 'Gagal menghapus sesi.' };
   }
+}
+
+// ==================== AUTHENTICATION ====================
+export async function loginAdmin(username: string, pass: string) {
+  try {
+    const user = await prisma.user.findUnique({ where: { username } });
+    if (!user || user.password !== pass) {
+      return { success: false, message: 'Username atau password salah!' };
+    }
+    
+    // Set cookie
+    cookies().set('admin_session', user.id.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 // 1 day
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, message: 'Terjadi kesalahan sistem' };
+  }
+}
+
+export async function logoutAdmin() {
+  cookies().delete('admin_session');
+  return { success: true };
 }
 
 // ==================== SUBJECTS (MATA PELAJARAN) ====================
