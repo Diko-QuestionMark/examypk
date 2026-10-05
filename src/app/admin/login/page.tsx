@@ -16,12 +16,21 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
 
-    const res = await loginAdmin(username, password);
-    if (res.success) {
-      router.push('/admin');
-      router.refresh();
-    } else {
-      setError(res.message || 'Login gagal');
+    try {
+      console.log('Mencoba login dengan:', username);
+      const res = await loginAdmin(username, password);
+      console.log('Respons dari server action:', res);
+      
+      if (res.success) {
+        router.push('/admin');
+        router.refresh();
+      } else {
+        setError(res.message || 'Login gagal');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error saat memanggil server action:', err);
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan tidak terduga di browser');
       setLoading(false);
     }
   };

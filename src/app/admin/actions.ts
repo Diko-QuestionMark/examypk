@@ -140,21 +140,23 @@ export async function loginAdmin(username: string, pass: string) {
     }
     
     // Set cookie
-    cookies().set('admin_session', user.id.toString(), {
+    const cookieStore = await cookies();
+    cookieStore.set('admin_session', user.id.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 // 1 day
     });
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    return { success: false, message: 'Terjadi kesalahan sistem' };
+    return { success: false, message: `Terjadi kesalahan sistem: ${error?.message || String(error)}` };
   }
 }
 
 export async function logoutAdmin() {
-  cookies().delete('admin_session');
+  const cookieStore = await cookies();
+  cookieStore.delete('admin_session');
   return { success: true };
 }
 
