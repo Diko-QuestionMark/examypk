@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getExamData } from "../actions";
 
 export default function ExamPage() {
   const router = useRouter();
@@ -9,23 +10,53 @@ export default function ExamPage() {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
-  // Mock questions
-  const totalQuestions = 20;
-  const questionText = "Berdasarkan teks di atas, kesimpulan manakah yang paling tepat untuk menggambarkan situasi ekonomi pada masa tersebut? Perhatikan setiap faktor yang telah disebutkan dalam paragraf 2 dan 3 sebelum memilih jawaban Anda.";
-  const options = [
-    { id: "A", text: "Tingkat inflasi sangat rendah sehingga daya beli masyarakat meningkat tajam." },
-    { id: "B", text: "Terjadi stagnasi ekonomi yang ditandai dengan kurangnya investasi asing." },
-    { id: "C", text: "Pertumbuhan ekonomi stabil meskipun ada sedikit fluktuasi pada nilai tukar." },
-    { id: "D", text: "Pemerintah berhasil menekan angka pengangguran melalui program padat karya." },
-    { id: "E", text: "Defisit anggaran membengkak karena subsidi energi yang terlalu besar." },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [examData, setExamData] = useState<any>(null);
 
   useEffect(() => {
+    // Fetch data soal saat komponen di-mount
+    const loadData = async () => {
+      const res = await getExamData();
+      if (res.success && res.data) {
+        setExamData(res.data);
+      } else {
+        alert(res.message || "Gagal memuat ujian. Silakan login kembali.");
+        router.push("/");
+      }
+      setLoading(false);
+    };
+    loadData();
+
+    // Timer Ujian
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [router]);
+
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontSize: '1.2rem' }}>Memuat Soal Ujian...</div>;
+  }
+
+  if (!examData || !examData.questions || examData.questions.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: '1rem' }}>
+        <h2>Belum ada soal di paket ini.</h2>
+        <button className="btn-primary" onClick={() => router.push("/")}>Kembali</button>
+      </div>
+    );
+  }
+
+  const totalQuestions = examData.questions.length;
+  const currentQData = examData.questions[currentQuestion - 1];
+  
+  const options = [
+    { id: "A", text: currentQData.optionA },
+    { id: "B", text: currentQData.optionB },
+    { id: "C", text: currentQData.optionC },
+    { id: "D", text: currentQData.optionD },
+    { id: "E", text: currentQData.optionE },
+  ];
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -52,8 +83,8 @@ export default function ExamPage() {
         <div className="exam-header-left">
           <img src="/LOGOZERI.png" alt="Logo Zeri" style={{ height: '50px', objectFit: 'contain' }} />
           <div>
-            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Bahasa Indonesia - Kelas XII</h2>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Peserta: Siswa Zeri (CBT-2024)</p>
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{examData.subjectName} - {examData.targetKelas}</h2>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Peserta: {examData.studentName} ({examData.studentNis})</p>
           </div>
         </div>
         <div className="exam-timer">
@@ -67,7 +98,7 @@ export default function ExamPage() {
         <div className="exam-content">
           <div className="question-container">
             <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Soal No. {currentQuestion}</h3>
-            <p className="question-text">{questionText}</p>
+            <p className="question-text">{currentQData.text}</p>
             
             <div className="options-list">
               {options.map((opt) => (
